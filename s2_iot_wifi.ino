@@ -1,9 +1,10 @@
-git#include <WiFiNINA.h>
+#include <WiFiNINA.h>
+#include "thingProperties.h"
 
 // create this file in your local repository and don't push to remote
 #include "arduino_secrets.h"
 
-char ssid[] = SECRET_SSID;        // your network SSID (name)
+char ssid[] = SECRET_SSID;        // your network SSID (name) 
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
@@ -24,6 +25,15 @@ void setup() {
     delay(10000);
 
   }
+  
+  // defined in thingProperties.h
+  initProperties();
+
+  // connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
 	
   // you're connected now, so print out the data:
   Serial.println("You're connected to the network");
@@ -39,6 +49,8 @@ void loop() {
  delay(10000);
  printData();
  Serial.println("----------------------------------------");
+
+ ArdunioCloud.update();
 }
 
 void printData() {
