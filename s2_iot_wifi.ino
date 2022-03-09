@@ -1,4 +1,4 @@
-#include <WiFiNINA.h>
+git#include <WiFiNINA.h>
 
 // create this file in your local repository and don't push to remote
 #include "arduino_secrets.h"
