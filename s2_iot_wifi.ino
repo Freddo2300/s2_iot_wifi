@@ -1,4 +1,9 @@
+#include <ThingerWiFiNINA.h>
+
+#include <WiFi.h>
 #include <WiFiNINA.h>
+
+
 #include "thingProperties.h"
 
 // create this file in your local repository and don't push to remote
@@ -7,6 +12,12 @@
 char ssid[] = SECRET_SSID;        // your network SSID (name) 
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
+
+#define THINGER_SERIAL_DEBUG
+#define THINGER_USE_STATIC_MEMORY
+#define THINGER_STATIC_MEMORY_SIZE 512
+
+ThingerWiFiNINA thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL);
 
 void setup() {
   // put your setup code here, to run once:
@@ -20,6 +31,8 @@ void setup() {
     Serial.println(ssid);
     // Connect to WPA/WPA2 network:
     status = WiFi.begin(ssid, pass);
+
+    thing.add_wifi(SSID, pass);
 
     // wait 10 seconds for connection:
     delay(10000);
@@ -50,7 +63,9 @@ void loop() {
  printData();
  Serial.println("----------------------------------------");
 
- ArdunioCloud.update();
+ ArduinoCloud.update();
+
+ thing.handle();
 }
 
 void printData() {
