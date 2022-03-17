@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiNINA.h>
 
+#include <DHT.h>
 
 #include "thingProperties.h"
 
@@ -19,6 +20,11 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 ThingerWiFiNINA thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL);
 
+#define DHTPIN 7
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
 void setup() {
   // put your setup code here, to run once:
   //Initialize serial and wait for port to open:
@@ -31,12 +37,17 @@ void setup() {
     Serial.println(ssid);
     // Connect to WPA/WPA2 network:
     status = WiFi.begin(ssid, pass);
-
+    // connect to thinger.io
     thing.add_wifi(SSID, pass);
+    // start DHT sensor
+    dht.begin();
 
+    thing["HumTemp"] >> [](pson &out) {
+      out["Humidity"] = dht.readHumidity();
+      out["Temperature"] = dht.readTemperature();
+    };
     // wait 10 seconds for connection:
     delay(10000);
-
   }
   
   // defined in thingProperties.h
@@ -60,12 +71,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   // check the network connection once every 10 seconds:
  delay(10000);
- printData();
- Serial.println("----------------------------------------");
 
  ArduinoCloud.update();
 
  thing.handle();
+ thing.write_bucket("first_bucket", "HumTemp");
 }
 
 void printData() {
@@ -84,5 +94,21 @@ void printData() {
   long rssi = WiFi.RSSI();
   Serial.print("signal strength (RSSI):");
   Serial.println(rssi);
+}
 
+void getHumidityAndTemperature() {
+ float humidity = dht.readHumidity();
+ float temperature = dht.readTemperature();
+
+ if(isnan(humidity) || isnan(temperature)) {
+  Serial.println("Failed to read from DHT sensor");
+  return;  
+  }
+
+ Serial.print("Humidity: ");
+ Serial.print(humidity);
+ Serial.print(" %\t");
+ Serial.print("Temperature");
+ Serial.print(temperature);
+ Serial.print(" *C");
 }
