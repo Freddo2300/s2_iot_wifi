@@ -25,6 +25,9 @@ ThingerWiFiNINA thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL);
 
 DHT dht(DHTPIN, DHTTYPE);
 
+#define HYGRO_PIN A0
+//float moisture = 0;
+
 void setup() {
   // put your setup code here, to run once:
   //Initialize serial and wait for port to open:
@@ -45,6 +48,9 @@ void setup() {
     thing["HumTemp"] >> [](pson &out) {
       out["Humidity"] = dht.readHumidity();
       out["Temperature"] = dht.readTemperature();
+    };
+    thing["SoilMoisture"] >> [](pson &out) {
+      out["Moisture"] = readMoisture();
     };
     // wait 10 seconds for connection:
     delay(10000);
@@ -73,8 +79,9 @@ void loop() {
  delay(10000);
 
  ArduinoCloud.update();
-
+ 
  thing.handle();
+ thing.write_bucket("soil_moisture", "SoilMoisture");
  thing.write_bucket("first_bucket", "HumTemp");
 }
 
@@ -96,19 +103,16 @@ void printData() {
   Serial.println(rssi);
 }
 
-void getHumidityAndTemperature() {
- float humidity = dht.readHumidity();
- float temperature = dht.readTemperature();
-
- if(isnan(humidity) || isnan(temperature)) {
-  Serial.println("Failed to read from DHT sensor");
-  return;  
+float readMoisture() {
+  for (int i = 0; i <= 100; i++) {
+    moisture = moisture + analogRead(HYGRO_PIN);
+    delay(1); 
   }
-
- Serial.print("Humidity: ");
- Serial.print(humidity);
- Serial.print(" %\t");
- Serial.print("Temperature");
- Serial.print(temperature);
- Serial.print(" *C");
+  moisture = moisture/100.0;
+  
+  return moisture;
 }
+
+void onMoistureChange() {}
+void onTemperatureChange() {}
+void onHumidityChange() {}
