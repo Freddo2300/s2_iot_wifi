@@ -18,7 +18,9 @@ DHT dht(DHTPIN, DHTTYPE);
  
 
 //float moisture = 0;
-int moisture;
+int soil;
+int temp;
+int hum;
 
 
 int Count; 
@@ -49,21 +51,20 @@ void setup() {
 void loop() { 
    // put your main code here, to run repeatedly: 
  
-   int soilVal = readMoisture();
-   
-    dht.begin();
+     dht.begin();
 
-/*
-    thing["HumTemp"] >> [](pson &out) {
-      out["Humidity"] = dht.readHumidity();
-      out["Temperature"] = dht.readTemperature();
-    };
-    
-    */
+   int soilVal = readSoil();
+   int tempVal = readTemp();
+   int humVal = readHum();
+
+
+/*   
+    dht.begin();
     
   int tempVal = dht.readTemperature();  
   int humVal = dht.readHumidity();
 
+*/
  
   Serial.print("DHT - Temp : "); 
   Serial.println(tempVal); 
@@ -81,7 +82,6 @@ void loop() {
      SigFox.begin(); 
      SigFox.status(); 
      SigFox.beginPacket(); 
- //       SigFox.write(temp}; 
         SigFox.write(soilVal); 
         SigFox.write(tempVal); 
         SigFox.write(humVal); 
@@ -96,7 +96,7 @@ void loop() {
     Serial.println("Threshold not exceeded"); 
   } 
   
-  delay(5000); 
+  delay(30000); 
      
    // Wait for 10 minutes. Low Power version (does not wake up from sleep), use delay 
    //LowPower.sleep(1*60*1000); 
@@ -104,17 +104,71 @@ void loop() {
 
 
 
- int readMoisture() {
-   /*
-  for (int i = 0; i <= 100; i++) {
-    moisture = moisture + analogRead(SOIL_PIN);
+ int readSoil() {
+   
+   int succesfullRead = 0;
+    
+    for (int i = 0; i <= 100; i++) {
+      int soilRead = analogRead(SOIL_PIN);
+      
+      if(readWithError(soilRead)){
+        continue;
+      }
+      
+    soil = soil + soilRead;
+    succesfullRead = succesfullRead + 1;
     delay(1); 
   }
-  moisture = moisture/100;
   
-  */
+  soil = soil/succesfullRead;
   
-  return analogRead(SOIL_PIN);
+  return soil;
 }
    
+   
+int readTemp() {
+   
+   int succesfullRead = 0;
+    
+    for (int i = 0; i <= 100; i++) {
+      int tempRead = dht.readTemperature();
+      
+      if(readWithError(tempRead)){
+        continue;
+      }
+      
+    temp = temp + tempRead;
+    succesfullRead = succesfullRead + 1;
+    delay(1); 
+  }
+  
+  temp = temp/succesfullRead;
+  
+  return temp;
+}
+
+ int readHum() {
+   
+   int succesfullRead = 0;
+    
+    for (int i = 0; i <= 100; i++) {
+      int humRead = dht.readHumidity();
+      
+      if(readWithError(humRead)){
+        continue;
+      }
+      
+    hum = hum + humRead;
+    succesfullRead = succesfullRead + 1;
+    delay(1); 
+  }
+  
+  hum = hum/succesfullRead;
+  
+  return hum;
+}
+
+boolean readWithError(int value){
+  return value >= 10000;
+}
 
